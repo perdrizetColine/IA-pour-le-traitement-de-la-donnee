@@ -83,8 +83,63 @@ Date,Hostname,Process,IdProcess,Message
 2024-12-11T17:20:14.050043+01:00,hilbert02,gnome-text-edit,6677,Trying to snapshot GtkGizmo 0x559f9a9e7800 without a current allocation
   
 ## model.ipynb
+
+Ce projet propose un cadre pour la détection d'anomalies dans les fichiers de logs à l'aide d'un classificateur Random Forest. Les étapes incluent le prétraitement des données, l'entraînement du modèle avec optimisation des hyperparamètres et le test pour détecter les anomalies.
+
+### Prérequis
+
+- pandas
   
-reste à entrainer le modèle avec apprentissage supervisé : classer avec ou sans anomalies
-exporter job de prétraitement
-exporter job d'entrainement
-on hot encoding
+- numpy
+  
+- scikit-learn
+  
+- joblib
+
+### Fichiers
+
+o 'logs_corrompu_label.csv' : Fichier de logs pour le prétraitement et l'entraînement.
+
+o 'all_logs.csv' : Fichier de test pour la détection des anomalies.
+
+### Utilisation
+
+logs_corrompu_label.csv : Fichier de logs pour le prétraitement et l'entraînement.
+
+all_logs.csv : Fichier de test pour la détection des anomalies.
+
+Utilisation
+
+1. Prétraitement des Données
+
+Le prétraitement nettoie les données et applique un encodage OneHotEncoding. Il sauvegarde également le pipeline de prétraitement pour une réutilisation ultérieure.
+
+from script import preprocess_data
+df_encoded = preprocess_data('logs_corrompu_label.csv')
+
+2. Entraîner le Modèle
+
+Cette étape entraîne un modèle Random Forest avec une recherche des meilleurs hyperparamètres. Le modèle optimisé est sauvegardé.
+
+from script import train_model_opti
+model, accuracy = train_model_opti(df_encoded)
+
+3. Tester le Modèle
+
+Utilisez le modèle entraîné pour prédire les anomalies dans un fichier de test.
+
+from script import test_model
+anomalies = test_model('all_logs.csv')
+print(anomalies)
+
+### Fonctionnalités
+
+Prétraitement : Gère les valeurs manquantes et encode les caractéristiques catégorielles.
+
+Optimisation des Hyperparamètres : Ajuste les hyperparamètres de Random Forest avec GridSearchCV.
+
+Détection d'Anomalies : Identifie les entrées considérées comme des anomalies.
+
+Résultats
+
+Le meilleur modèle atteint une précision de ~99.95% sur l'ensemble d'entraînement.
