@@ -142,4 +142,4 @@ Détection d'Anomalies : Identifie les entrées considérées comme des anomalie
 
 Résultats
 
-Le meilleur modèle atteint une précision de ~99.95% sur l'ensemble d'entraînement.
+Le meilleur modèle atteint une précision de ~99.53% sur l'ensemble d'entraînement.
