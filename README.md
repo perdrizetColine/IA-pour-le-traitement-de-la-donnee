@@ -1,145 +1,129 @@
-# IA POUR LE TRAITEMENT DE LA DONNEE
+# IA POUR LE TRAITEMENT DE LA DONNÉE
 
-## pivot.py
+Le projet a pour objectif principal de gérer les logs d’une machine en les chargeant dans un cluster Elasticsearch afin de faciliter leur stockage, leur analyse et leur visualisation. En complément, des logs spécifiques contenant des anomalies sont également intégrés dans le cluster pour enrichir les données disponibles et permettre une meilleure détection des anomalies.
 
-  Ce script permet de lire, analyser et indexer des fichiers journaux (logs) dans Elasticsearch. Il extrait des informations structurées à partir de fichiers logs au format prédéfini, puis les stocke dans un index Elasticsearch.
-  
-### Prérequis
+Ensuite, l’ensemble des logs provenant de différentes machines est récupéré pour constituer un jeu de données global. Sur ce jeu de données, un modèle d’apprentissage est entraîné en identifiant les logs contenant des anomalies. Ce modèle est par la suite testé sur un fichier dédié contenant des logs marqués comme anormaux, afin d’évaluer sa capacité à détecter efficacement ces anomalies.
 
-- Python 3.7 ou supérieur
-  
-- Elasticsearch (instance accessible)
-  
-- Bibliothèques Python :
-  
-  - 'elasticsearch'
-    
-  - 'os'
-    
-  - 're'
-    
-### Fonctionnalités
+## **pivot.py**
 
-o Vérifie l'existence des fichiers journaux avant analyse.
+Ce script lit, analyse et indexe des fichiers journaux (logs) dans Elasticsearch. Il extrait des informations structurées à partir de fichiers logs au format prédéfini, puis les stocke dans un index Elasticsearch.
 
-o Analyse les lignes de log à l'aide d'expressions régulières pour extraire les informations structurées :
+### **Prérequis**
 
-   - Date
+| Composant            | Description                                      |
+|-----------------------|--------------------------------------------------|
+| **Python**           | Version 3.7 ou supérieure                        |
+| **Elasticsearch**    | Instance accessible                              |
+| **Bibliothèques Python** | `elasticsearch`, `os`, `re`                  |
 
-   - Nom d'hôte
-   
-   - Processus
-   
-   - ID de processus
-   
-   - Message
+### **Fonctionnalités**
 
-o Indexe les données dans Elasticsearch.
+- Vérification de l'existence des fichiers journaux avant analyse.
+- Analyse des lignes de log à l'aide d'expressions régulières pour extraire :
+  - Date
+  - Nom d'hôte
+  - Processus
+  - ID de processus
+  - Message
+- Indexation des données dans Elasticsearch.
+- Vérification des données indexées et affichage d'un aperçu.
 
-o Vérifie les données indexées et affiche un aperçu.
+### **Exemple de Sortie**
 
-### Exemple de Sortie
-
+```
 Données indexées avec succès dans l'index 'data_hilbert02'.
 
 5 documents indexés dans Elasticsearch :
-
 {'Date': '2024-12-16T14:09:57.761356+01:00', 'Hostname': 'hilbert02', 'Process': 'gnome-keyring-ssh.desktop', 'IdProcess': '2037', 'Message': 'discover_other_daemon: 1GNOME_KEYRING_CONTROL=/run/user/1000/keyring'}
+```
 
-## get.py
+---
 
-  Ce script permet d'extraire les logs de tous les index Elasticsearch et de les exporter dans un fichier CSV structuré. Il utilise l'API scroll d'Elasticsearch pour gérer de grandes quantités de données.
+## **get.py**
 
-### Prérequis
+Ce script extrait les logs de tous les index Elasticsearch et les exporte dans un fichier CSV structuré.
 
-- Python 3.7 ou supérieur
+### **Prérequis**
 
-- Elasticsearch (instance en cours d'exécution)
+| Composant            | Description                                      |
+|-----------------------|--------------------------------------------------|
+| **Python**           | Version 3.7 ou supérieure                        |
+| **Elasticsearch**    | Instance en cours d'exécution                    |
+| **Bibliothèques Python** | `elasticsearch`, `csv`                       |
 
-- Bibliothèques Python :
+### **Fonctionnalités**
 
-  - 'elasticsearch'
+- **Connexion à Elasticsearch** : Se connecte au cluster spécifié.
+- **Requête multi-index** : Récupère les documents de tous les index ou d’un index spécifique.
+- **Extraction sélective** : Récupère uniquement les champs définis.
+- **Gestion de gros volumes** : Utilise l'API `scroll` pour paginer les résultats.
+- **Exportation CSV** : Sauvegarde les données dans un fichier CSV prêt à être analysé.
 
-  - 'csv'
-    
-### Fonctionnalités
+### **Exemple de Sortie**
 
-o Connexion à Elasticsearch : Se connecte au cluster spécifié.
+| Date                          | Hostname  | Process        | IdProcess | Message                                                                           |
+|-------------------------------|-----------|----------------|-----------|-----------------------------------------------------------------------------------|
+| 2024-12-11T17:14:51.738480+01:00 | hilbert02 | gnome-shell    | 2026      | meta_window_set_stack_position_no_sync: assertion 'window->stack_position >= 0' failed |
+| 2024-12-11T17:20:14.050043+01:00 | hilbert02 | gnome-text-edit | 6677      | Trying to snapshot GtkGizmo 0x559f9a9e7800 without a current allocation          |
 
-o Requête multi-index : Récupère les documents de tous les index ou d’un index spécifique.
+---
 
-o Extraction sélective : Permet de récupérer uniquement les champs définis.
+## **model.ipynb**
 
-o Gestion de gros volumes : Utilise la pagination via l'API scroll d'Elasticsearch.
+Ce projet propose un cadre pour détecter des anomalies dans les fichiers logs grâce à un classificateur **Random Forest**.
 
-o Exportation CSV : Sauvegarde les données dans un fichier CSV prêt à être analysé.
+### **Prérequis**
 
-### Exemple de sortie
+| Bibliothèque        | Description                        |
+|---------------------|------------------------------------|
+| `pandas`            | Manipulation de données           |
+| `numpy`             | Calculs numériques                |
+| `scikit-learn`      | Machine learning                  |
+| `joblib`            | Sauvegarde des modèles            |
 
-Date,Hostname,Process,IdProcess,Message
+### **Fichiers**
 
-2024-12-11T17:14:51.738480+01:00,hilbert02,gnome-shell,2026,meta_window_set_stack_position_no_sync: assertion 'window->stack_position >= 0' failed
+| Nom du fichier               | Description                                       |
+|------------------------------|---------------------------------------------------|
+| `logs_corrompu_label.csv`    | Logs pour le prétraitement et l'entraînement      |
+| `all_logs.csv`               | Logs pour la détection des anomalies             |
 
-2024-12-11T17:20:14.050043+01:00,hilbert02,gnome-text-edit,6677,Trying to snapshot GtkGizmo 0x559f9a9e7800 without a current allocation
-  
-## model.ipynb
+### **Utilisation**
 
-Ce projet propose un cadre pour la détection d'anomalies dans les fichiers de logs à l'aide d'un classificateur Random Forest. Les étapes incluent le prétraitement des données, l'entraînement du modèle avec optimisation des hyperparamètres et le test pour détecter les anomalies.
+1. **Prétraitement des Données**
 
-### Prérequis
+   Nettoyez les données et appliquez un encodage OneHotEncoding.
 
-- pandas
-  
-- numpy
-  
-- scikit-learn
-  
-- joblib
+   ```python
+   from script import preprocess_data
+   df_encoded = preprocess_data('logs_corrompu_label.csv')
+   ```
 
-### Fichiers
+2. **Entraînement du Modèle**
 
-o 'logs_corrompu_label.csv' : Fichier de logs pour le prétraitement et l'entraînement.
+   Entraînez un modèle Random Forest optimisé.
 
-o 'all_logs.csv' : Fichier de test pour la détection des anomalies.
+   ```python
+   from script import train_model_opti
+   model, accuracy = train_model_opti(df_encoded)
+   ```
 
-### Utilisation
+3. **Test du Modèle**
 
-logs_corrompu_label.csv : Fichier de logs pour le prétraitement et l'entraînement.
+   Utilisez le modèle entraîné pour détecter les anomalies.
 
-all_logs.csv : Fichier de test pour la détection des anomalies.
+   ```python
+   from script import test_model
+   anomalies = test_model('all_logs.csv')
+   print(anomalies)
+   ```
 
-Utilisation
+### **Fonctionnalités**
 
-1. Prétraitement des Données
+- **Prétraitement** : Nettoie les données et encode les caractéristiques catégorielles.
+- **Optimisation des Hyperparamètres** : Ajuste les paramètres avec `GridSearchCV`.
+- **Détection d'Anomalies** : Identifie les entrées considérées comme des anomalies.
 
-Le prétraitement nettoie les données et applique un encodage OneHotEncoding. Il sauvegarde également le pipeline de prétraitement pour une réutilisation ultérieure.
+### **Résultats**
 
-from script import preprocess_data
-df_encoded = preprocess_data('logs_corrompu_label.csv')
-
-2. Entraîner le Modèle
-
-Cette étape entraîne un modèle Random Forest avec une recherche des meilleurs hyperparamètres. Le modèle optimisé est sauvegardé.
-
-from script import train_model_opti
-model, accuracy = train_model_opti(df_encoded)
-
-3. Tester le Modèle
-
-Utilisez le modèle entraîné pour prédire les anomalies dans un fichier de test.
-
-from script import test_model
-anomalies = test_model('all_logs.csv')
-print(anomalies)
-
-### Fonctionnalités
-
-Prétraitement : Gère les valeurs manquantes et encode les caractéristiques catégorielles.
-
-Optimisation des Hyperparamètres : Ajuste les hyperparamètres de Random Forest avec GridSearchCV.
-
-Détection d'Anomalies : Identifie les entrées considérées comme des anomalies.
-
-Résultats
-
-Le meilleur modèle atteint une précision de ~99.53% sur l'ensemble d'entraînement.
+- Précision : **~99.53%** sur l'ensemble d'entraînement.
